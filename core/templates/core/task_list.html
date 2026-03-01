@@ -1,0 +1,153 @@
+{% extends 'core/base.html' %}
+{% block title %}Tâches – TaskManager Pro{% endblock %}
+{% block page_title %}Tâches{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6" data-aos="fade-down">
+    <div>
+        <h1 class="font-display text-2xl font-bold text-slate-800">Toutes les tâches</h1>
+        <p class="text-slate-500 text-sm mt-0.5">{{ tasks.count }} tâche{{ tasks.count|pluralize }}</p>
+    </div>
+    <a href="{% url 'task_create' %}"
+       class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md">
+        <i data-lucide="plus" class="w-4 h-4"></i>Nouvelle tâche
+    </a>
+</div>
+
+<!-- Filters -->
+<form method="get" data-aos="fade-down" data-aos-delay="60"
+      class="bg-white rounded-2xl border border-slate-100 p-4 mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+    <div class="lg:col-span-2">
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Recherche</label>
+        <input type="text" name="search" value="{{ filters.search }}" placeholder="Titre de la tâche...">
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Statut</label>
+        <select name="statut">
+            <option value="">Tous</option>
+            <option value="todo" {% if filters.statut == 'todo' %}selected{% endif %}>À faire</option>
+            <option value="inprogress" {% if filters.statut == 'inprogress' %}selected{% endif %}>En cours</option>
+            <option value="done" {% if filters.statut == 'done' %}selected{% endif %}>Terminé</option>
+        </select>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Priorité</label>
+        <select name="priorite">
+            <option value="">Toutes</option>
+            <option value="high" {% if filters.priorite == 'high' %}selected{% endif %}>Haute</option>
+            <option value="medium" {% if filters.priorite == 'medium' %}selected{% endif %}>Moyenne</option>
+            <option value="low" {% if filters.priorite == 'low' %}selected{% endif %}>Basse</option>
+        </select>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Projet</label>
+        <select name="project">
+            <option value="">Tous</option>
+            {% for project in projects %}<option value="{{ project.pk }}" {% if filters.project == project.pk|stringformat:"s" %}selected{% endif %}>{{ project.nom }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="flex gap-2">
+        <button type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-xl py-2.5 text-sm font-semibold transition flex items-center justify-center gap-1">
+            <i data-lucide="filter" class="w-3.5 h-3.5"></i>Filtrer
+        </button>
+        <a href="{% url 'task_list' %}" class="px-3 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-slate-500 transition flex items-center">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </a>
+    </div>
+</form>
+
+{% if tasks %}
+<div class="bg-white rounded-2xl border border-slate-100 overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Tâche</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Projet</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Assigné à</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Statut</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Priorité</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Échéance</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for task in tasks %}
+                <tr class="hover:bg-slate-50/50 transition {% if task.is_overdue %}bg-red-50/30{% endif %}">
+                    <td class="px-5 py-3.5">
+                        <a href="{% url 'task_detail' task.pk %}" class="font-semibold text-slate-800 hover:text-brand-600 text-sm">{{ task.titre }}</a>
+                        {% if task.description %}<p class="text-xs text-slate-400 mt-0.5">{{ task.description|truncatewords:8 }}</p>{% endif %}
+                    </td>
+                    <td class="px-4 py-3.5">
+                        <a href="{% url 'project_detail' task.projet.pk %}" class="flex items-center gap-1.5 text-xs text-slate-500 hover:text-brand-600 transition">
+                            <i data-lucide="folder" class="w-3.5 h-3.5"></i>{{ task.projet.nom }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-3.5">
+                        {% if task.assigne_a %}
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                {{ task.assigne_a.username|slice:":1"|upper }}
+                            </div>
+                            <span class="text-xs text-slate-600">{{ task.assigne_a.get_full_name|default:task.assigne_a.username }}</span>
+                        </div>
+                        {% else %}<span class="text-xs text-slate-300 flex items-center gap-1"><i data-lucide="user-x" class="w-3.5 h-3.5"></i>—</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3.5">
+                        <form method="post" action="{% url 'task_update_status' task.pk %}">
+                            {% csrf_token %}
+                            <select name="statut" onchange="this.form.submit()"
+                                    class="!py-1 !px-2 !w-auto text-xs rounded-lg font-medium
+                                           {% if task.statut == 'todo' %}!bg-slate-100 !border-slate-200 !text-slate-600
+                                           {% elif task.statut == 'inprogress' %}!bg-amber-50 !border-amber-200 !text-amber-700
+                                           {% else %}!bg-emerald-50 !border-emerald-200 !text-emerald-700{% endif %}">
+                                <option value="todo" {% if task.statut == 'todo' %}selected{% endif %}>À faire</option>
+                                <option value="inprogress" {% if task.statut == 'inprogress' %}selected{% endif %}>En cours</option>
+                                <option value="done" {% if task.statut == 'done' %}selected{% endif %}>Terminé</option>
+                            </select>
+                        </form>
+                    </td>
+                    <td class="px-4 py-3.5">
+                        <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full
+                                     {% if task.priorite == 'high' %}prio-high{% elif task.priorite == 'medium' %}prio-medium{% else %}prio-low{% endif %}">
+                            {{ task.get_priorite_display }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3.5">
+                        {% if task.date_limite %}
+                        <span class="text-xs font-medium {% if task.is_overdue %}text-red-600{% else %}text-slate-500{% endif %} flex items-center gap-1">
+                            {% if task.is_overdue %}<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>{% endif %}
+                            {{ task.date_limite|date:"d/m/Y" }}
+                        </span>
+                        {% else %}<span class="text-slate-300 text-xs">—</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3.5">
+                        <div class="flex items-center justify-end gap-1">
+                            <a href="{% url 'task_detail' task.pk %}" class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 transition">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </a>
+                            <a href="{% url 'task_edit' task.pk %}" class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </a>
+                            {% if user.is_admin %}
+                            <a href="{% url 'task_delete' task.pk %}" class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-red-600 hover:border-red-200 transition">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div data-aos="fade-up" class="bg-white rounded-2xl border border-slate-100 py-16 text-center">
+    <i data-lucide="check-square" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+    <h3 class="font-display font-semibold text-slate-500 mb-1">Aucune tâche trouvée</h3>
+    <a href="{% url 'task_create' %}" class="inline-flex items-center gap-2 mt-4 bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">
+        <i data-lucide="plus" class="w-4 h-4"></i>Créer une tâche
+    </a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ project.nom }} – TaskManager Pro{% endblock %}
+{% block page_title %}{{ project.nom }}{% endblock %}
+{% block content %}
+<!-- Header card -->
+<div data-aos="fade-down" class="relative overflow-hidden rounded-2xl mb-6 text-white p-6" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);">
+    <div class="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full pointer-events-none"></div>
+    <div class="absolute bottom-0 right-10 w-24 h-24 bg-white/5 rounded-full pointer-events-none"></div>
+    <nav class="flex items-center gap-2 text-xs text-white/60 mb-3">
+        <a href="{% url 'project_list' %}" class="hover:text-white transition">Projets</a>
+        <i data-lucide="chevron-right" class="w-3 h-3"></i>
+        <span class="text-white">{{ project.nom }}</span>
+    </nav>
+    <div class="flex items-start justify-between">
+        <div>
+            <h1 class="font-display text-2xl font-bold mb-1">{{ project.nom }}</h1>
+            <p class="text-white/70 text-sm max-w-xl">{{ project.description|default:"Aucune description" }}</p>
+            <div class="flex items-center gap-4 mt-3 text-xs text-white/60">
+                <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i>{{ project.date_debut|date:"d F Y" }}</span>
+                {% if project.date_fin %}<span class="flex items-center gap-1"><i data-lucide="calendar-x" class="w-3.5 h-3.5"></i>{{ project.date_fin|date:"d F Y" }}</span>{% endif %}
+                <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i>{{ project.created_by.get_full_name|default:project.created_by.username|default:"—" }}</span>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'task_create' %}?project={{ project.pk }}"
+               class="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur text-white text-sm font-semibold px-4 py-2 rounded-xl transition border border-white/20">
+                <i data-lucide="plus" class="w-4 h-4"></i>Ajouter une tâche
+            </a>
+            {% if user.is_admin %}
+            <a href="{% url 'project_edit' project.pk %}"
+               class="w-9 h-9 bg-white/20 hover:bg-white/30 border border-white/20 rounded-xl flex items-center justify-center transition">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Progress bar -->
+    <div class="mt-4">
+        <div class="flex justify-between text-xs text-white/70 mb-1">
+            <span>Avancement global</span><span>{{ project.get_progress }}%</span>
+        </div>
+        <div class="h-2 bg-white/20 rounded-full overflow-hidden">
+            <div class="h-full bg-white rounded-full transition-all duration-700" style="width:{{ project.get_progress }}%"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick stats -->
+<div class="grid grid-cols-3 gap-3 mb-6" data-aos="fade-up">
+    <div class="bg-white rounded-2xl border border-slate-100 p-4 text-center">
+        <p class="text-2xl font-display font-bold text-slate-500">{{ tasks_todo.count }}</p>
+        <p class="text-xs text-slate-400 mt-1">À faire</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-100 p-4 text-center">
+        <p class="text-2xl font-display font-bold text-amber-500">{{ tasks_inprogress.count }}</p>
+        <p class="text-xs text-slate-400 mt-1">En cours</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-100 p-4 text-center">
+        <p class="text-2xl font-display font-bold text-emerald-500">{{ tasks_done.count }}</p>
+        <p class="text-xs text-slate-400 mt-1">Terminées</p>
+    </div>
+</div>
+
+<!-- Kanban board -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6" data-aos="fade-up" data-aos-delay="100">
+    <!-- À faire -->
+    <div>
+        <div class="flex items-center gap-2 px-1 mb-3">
+            <div class="w-3 h-3 rounded-full bg-slate-400"></div>
+            <h3 class="font-display font-semibold text-slate-600 text-sm">À faire</h3>
+            <span class="ml-auto text-xs bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full">{{ tasks_todo.count }}</span>
+        </div>
+        <div class="space-y-2 min-h-20">
+            {% for task in tasks_todo %}{% include 'core/_task_card.html' %}{% empty %}
+            <div class="text-center text-slate-300 py-6 text-xs"><i data-lucide="inbox" class="w-6 h-6 mx-auto mb-1"></i>Vide</div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- En cours -->
+    <div>
+        <div class="flex items-center gap-2 px-1 mb-3">
+            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+            <h3 class="font-display font-semibold text-slate-600 text-sm">En cours</h3>
+            <span class="ml-auto text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">{{ tasks_inprogress.count }}</span>
+        </div>
+        <div class="space-y-2 min-h-20">
+            {% for task in tasks_inprogress %}{% include 'core/_task_card.html' %}{% empty %}
+            <div class="text-center text-slate-300 py-6 text-xs"><i data-lucide="inbox" class="w-6 h-6 mx-auto mb-1"></i>Vide</div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Terminées -->
+    <div>
+        <div class="flex items-center gap-2 px-1 mb-3">
+            <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+            <h3 class="font-display font-semibold text-slate-600 text-sm">Terminées</h3>
+            <span class="ml-auto text-xs bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded-full">{{ tasks_done.count }}</span>
+        </div>
+        <div class="space-y-2 min-h-20">
+            {% for task in tasks_done %}{% include 'core/_task_card.html' %}{% empty %}
+            <div class="text-center text-slate-300 py-6 text-xs"><i data-lucide="inbox" class="w-6 h-6 mx-auto mb-1"></i>Vide</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Members -->
+<div data-aos="fade-up" data-aos-delay="150" class="bg-white rounded-2xl border border-slate-100 p-5">
+    <h3 class="font-display font-semibold text-slate-700 text-sm mb-4 flex items-center gap-2">
+        <i data-lucide="users" class="w-4 h-4 text-brand-500"></i>Membres du projet ({{ project.membres.count }})
+    </h3>
+    <div class="flex flex-wrap gap-3">
+        {% for m in project.membres.all %}
+        <div class="flex items-center gap-2.5 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+            <div class="w-8 h-8 rounded-full bg-brand-500 text-white text-xs font-bold flex items-center justify-center">
+                {{ m.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <p class="text-sm font-semibold text-slate-700 leading-tight">{{ m.get_full_name|default:m.username }}</p>
+                <p class="text-[10px] text-slate-400">{{ m.get_role_display }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-slate-400 text-sm">Aucun membre assigné</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+<!-- _task_card.html -->
+<div class="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200
+            {% if task.is_overdue %}border-l-4 !border-l-red-400{% elif task.statut == 'todo' %}border-l-4 !border-l-slate-300{% elif task.statut == 'inprogress' %}border-l-4 !border-l-amber-400{% else %}border-l-4 !border-l-emerald-400{% endif %}">
+
+    <div class="flex items-start justify-between mb-2">
+        <a href="{% url 'task_detail' task.pk %}" class="font-semibold text-slate-800 text-sm leading-tight hover:text-brand-600 transition">
+            {{ task.titre }}
+        </a>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ml-2 flex-shrink-0
+                     {% if task.priorite == 'high' %}prio-high{% elif task.priorite == 'medium' %}prio-medium{% else %}prio-low{% endif %}">
+            {{ task.get_priorite_display }}
+        </span>
+    </div>
+
+    {% if task.description %}
+    <p class="text-xs text-slate-400 mb-2 leading-relaxed">{{ task.description|truncatewords:10 }}</p>
+    {% endif %}
+
+    <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-1.5 text-xs text-slate-400">
+            {% if task.assigne_a %}
+            <div class="w-5 h-5 rounded-full bg-brand-500 text-white text-[9px] font-bold flex items-center justify-center">
+                {{ task.assigne_a.username|slice:":1"|upper }}
+            </div>
+            <span>{{ task.assigne_a.get_full_name|default:task.assigne_a.username|truncatechars:14 }}</span>
+            {% else %}
+            <i data-lucide="user-x" class="w-3.5 h-3.5"></i><span>Non assigné</span>
+            {% endif %}
+        </div>
+        {% if task.date_limite %}
+        <span class="text-[10px] font-semibold {% if task.is_overdue %}text-red-600 bg-red-50 border-red-100{% else %}text-slate-400 bg-slate-50 border-slate-100{% endif %} px-2 py-0.5 rounded-full border">
+            {% if task.is_overdue %}<i data-lucide="alert-circle" class="w-3 h-3 inline mr-0.5"></i>{% endif %}
+            {{ task.date_limite|date:"d/m" }}
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Quick status buttons -->
+    <form method="post" action="{% url 'task_update_status' task.pk %}" class="flex gap-1 flex-wrap">
+        {% csrf_token %}
+        {% if task.statut != 'todo' %}
+        <button type="submit" name="statut" value="todo"
+                class="text-[10px] px-2 py-0.5 rounded-full border border-slate-200 text-slate-500 hover:bg-slate-100 transition">À faire</button>
+        {% endif %}
+        {% if task.statut != 'inprogress' %}
+        <button type="submit" name="statut" value="inprogress"
+                class="text-[10px] px-2 py-0.5 rounded-full border border-amber-200 text-amber-600 hover:bg-amber-50 transition">En cours</button>
+        {% endif %}
+        {% if task.statut != 'done' %}
+        <button type="submit" name="statut" value="done"
+                class="text-[10px] px-2 py-0.5 rounded-full border border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition">Terminé</button>
+        {% endif %}
+    </form>
+</div>

@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+{% block auth_content %}
+{% load split_filters %}
+
+<div class="min-h-screen flex" style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4f46e5 100%);">
+    <!-- Left decorative panel -->
+    <div class="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative overflow-hidden">
+        <!-- Abstract background circles -->
+        <div class="absolute top-0 left-0 w-96 h-96 bg-brand-400/20 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-80 h-80 bg-purple-400/20 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl"></div>
+        <div class="relative z-10 text-center" data-aos="fade-right">
+            <div class="w-20 h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center mx-auto mb-6">
+                <i data-lucide="kanban" class="w-10 h-10 text-white"></i>
+            </div>
+            <h1 class="font-display text-white text-4xl font-bold mb-4 leading-tight">Gérez vos projets<br>sans friction</h1>
+            <p class="text-brand-200 text-lg max-w-sm mx-auto">Organisez, assignez, suivez. Tout votre travail d'équipe en un seul endroit.</p>
+            <!-- Features list -->
+            <div class="mt-10 space-y-3 text-left max-w-xs mx-auto">
+                {% for feature in "Multi-entreprise isolé,Tableau de bord temps réel,Vue Kanban interactive,Gestion des priorités"|split:"," %}
+                <div class="flex items-center gap-3 text-white/80 text-sm">
+                    <div class="w-5 h-5 rounded-full bg-brand-400/40 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="check" class="w-3 h-3 text-brand-200"></i>
+                    </div>
+                    {{ feature }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right login panel -->
+    <div class="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <div class="w-full max-w-md" data-aos="fade-left" data-aos-delay="100">
+            <!-- Mobile logo -->
+            <div class="lg:hidden text-center mb-8">
+                <div class="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="kanban" class="w-7 h-7 text-white"></i>
+                </div>
+                <h2 class="font-display text-white text-2xl font-bold">TaskManager Pro</h2>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-2xl p-8">
+                <h2 class="font-display text-slate-800 text-2xl font-bold mb-1">Connexion</h2>
+                <p class="text-slate-500 text-sm mb-7">Accédez à votre espace de travail</p>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nom d'utilisateur</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-400"></i>
+                            </span>
+                            <input type="text" name="username" placeholder="votre_identifiant" class="!pl-9" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Mot de passe</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2">
+                                <i data-lucide="lock" class="w-4 h-4 text-slate-400"></i>
+                            </span>
+                            <input type="password" name="password" placeholder="••••••••" class="!pl-9" required>
+                        </div>
+                    </div>
+                    {% if form.non_field_errors %}
+                    <div class="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-xl p-3">
+                        <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+                        Identifiants incorrects. Veuillez réessayer.
+                    </div>
+                    {% endif %}
+                    <button type="submit"
+                            class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 mt-2 shadow-md hover:shadow-brand-500/25">
+                        <i data-lucide="log-in" class="w-4 h-4"></i>
+                        Se connecter
+                    </button>
+                </form>
+                <div class="mt-5 pt-5 border-t border-slate-100 text-center">
+                    <p class="text-slate-500 text-sm">Pas encore de compte ?
+                        <a href="{% url 'register' %}" class="text-brand-600 font-semibold hover:text-brand-700">Créer un compte</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Demo accounts -->
+          <!--   <div class="mt-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4" data-aos="fade-up" data-aos-delay="300">
+                <p class="text-white text-xs font-semibold mb-3 flex items-center gap-1.5">
+                    <i data-lucide="info" class="w-3.5 h-3.5"></i>Comptes de démonstration
+                </p>
+                <div class="grid grid-cols-2 gap-2 text-[11px]">
+                    <div class="bg-white/10 rounded-lg p-2.5">
+                        <p class="text-white font-semibold">🏢 TechCorp A</p>
+                        <p class="text-brand-200 mt-1"><code>admin_a</code> / admin123</p>
+                        <p class="text-brand-200"><code>emp_a</code> / emp123</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-2.5">
+                        <p class="text-white font-semibold">🚀 InnovateLab B</p>
+                        <p class="text-brand-200 mt-1"><code>admin_b</code> / admin123</p>
+                        <p class="text-brand-200"><code>emp_b</code> / emp123</p>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+    </div>
+</div>
+{% endblock %}

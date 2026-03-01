@@ -1,0 +1,13 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[60vh] text-center" data-aos="fade-up">
+    <div class="w-20 h-20 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-5">
+        <i data-lucide="building-x" class="w-10 h-10 text-amber-600"></i>
+    </div>
+    <h2 class="font-display text-2xl font-bold text-slate-800 mb-2">Aucune entreprise assignée</h2>
+    <p class="text-slate-500 max-w-sm mb-6">Votre compte n'est pas encore lié à une entreprise. Contactez un administrateur pour rejoindre un espace de travail.</p>
+    <a href="{% url 'logout' %}" class="flex items-center gap-2 border border-red-200 text-red-600 hover:bg-red-50 font-semibold px-5 py-2.5 rounded-xl transition">
+        <i data-lucide="log-out" class="w-4 h-4"></i>Se déconnecter
+    </a>
+</div>
+{% endblock %}

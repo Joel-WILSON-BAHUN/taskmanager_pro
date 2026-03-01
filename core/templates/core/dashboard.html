@@ -1,0 +1,225 @@
+{% extends 'core/base.html' %}
+{% block title %}Tableau de bord – TaskManager Pro{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<!-- Welcome -->
+<div class="flex items-center justify-between mb-6" data-aos="fade-down">
+    <div>
+        <h1 class="font-display text-2xl font-bold text-slate-800">
+            Bonjour, {{ user.get_full_name|default:user.username }} 👋
+        </h1>
+        <p class="text-slate-500 text-sm mt-0.5">
+            <span class="text-brand-600 font-medium">{{ user.tenant.nom }}</span> · {{ today|date:"l d F Y" }}
+        </p>
+    </div>
+    {% if user.is_admin %}
+    <div class="flex gap-2">
+        <a href="{% url 'project_create' %}"
+           class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md hover:shadow-brand-500/25">
+            <i data-lucide="folder-plus" class="w-4 h-4"></i>Nouveau projet
+        </a>
+        <a href="{% url 'task_create' %}"
+           class="flex items-center gap-2 border border-brand-200 text-brand-600 hover:bg-brand-50 text-sm font-semibold px-4 py-2.5 rounded-xl transition">
+            <i data-lucide="plus" class="w-4 h-4"></i>Nouvelle tâche
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Stats cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    {% with delay=0 %}
+    <div data-aos="fade-up" data-aos-delay="0"
+         class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg"
+         style="background:linear-gradient(135deg,#4f46e5,#7c3aed);">
+        <div class="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full"></div>
+        <i data-lucide="folder-open" class="w-7 h-7 mb-3 opacity-80"></i>
+        <p class="text-3xl font-display font-bold">{{ stats.total_projects }}</p>
+        <p class="text-sm text-white/80 mt-0.5">Projets actifs</p>
+    </div>
+    <div data-aos="fade-up" data-aos-delay="80"
+         class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg"
+         style="background:linear-gradient(135deg,#64748b,#475569);">
+        <div class="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full"></div>
+        <i data-lucide="circle" class="w-7 h-7 mb-3 opacity-80"></i>
+        <p class="text-3xl font-display font-bold">{{ stats.tasks_todo }}</p>
+        <p class="text-sm text-white/80 mt-0.5">À faire</p>
+    </div>
+    <div data-aos="fade-up" data-aos-delay="160"
+         class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg"
+         style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+        <div class="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full"></div>
+        <i data-lucide="refresh-cw" class="w-7 h-7 mb-3 opacity-80"></i>
+        <p class="text-3xl font-display font-bold">{{ stats.tasks_inprogress }}</p>
+        <p class="text-sm text-white/80 mt-0.5">En cours</p>
+    </div>
+    <div data-aos="fade-up" data-aos-delay="240"
+         class="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg"
+         style="background:linear-gradient(135deg,#10b981,#059669);">
+        <div class="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full"></div>
+        <i data-lucide="check-circle-2" class="w-7 h-7 mb-3 opacity-80"></i>
+        <p class="text-3xl font-display font-bold">{{ stats.tasks_done }}</p>
+        <p class="text-sm text-white/80 mt-0.5">Terminées</p>
+    </div>
+    {% endwith %}
+</div>
+
+<!-- Charts row -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+    <!-- Donut -->
+    <div data-aos="fade-right" class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <h3 class="font-display font-semibold text-slate-700 text-sm mb-4 flex items-center gap-2">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-brand-500"></i>Répartition des tâches
+        </h3>
+        {% if stats.total_tasks > 0 %}
+        <canvas id="taskDonut" class="max-h-52"></canvas>
+        {% else %}
+        <div class="flex flex-col items-center justify-center py-10 text-slate-400">
+            <i data-lucide="inbox" class="w-10 h-10 mb-2 opacity-50"></i>
+            <p class="text-sm">Aucune tâche</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bar chart -->
+    <div data-aos="fade-left" class="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+        <h3 class="font-display font-semibold text-slate-700 text-sm mb-4 flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-4 h-4 text-brand-500"></i>Tâches par projet
+        </h3>
+        {% if projects_chart %}
+        <canvas id="projectBar" class="max-h-52"></canvas>
+        {% else %}
+        <div class="flex flex-col items-center justify-center py-10 text-slate-400">
+            <i data-lucide="folder-x" class="w-10 h-10 mb-2 opacity-50"></i>
+            <p class="text-sm">Aucun projet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Urgent + My tasks -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+    <!-- Urgent -->
+    <div data-aos="fade-up" data-aos-delay="50" class="bg-white rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <h3 class="font-display font-semibold text-slate-700 text-sm flex items-center gap-2">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500"></i>Tâches urgentes / en retard
+            </h3>
+            <a href="{% url 'task_list' %}" class="text-xs text-brand-600 hover:text-brand-700 font-medium">Voir tout →</a>
+        </div>
+        <div class="divide-y divide-slate-50">
+            {% for task in urgent_tasks %}
+            <div class="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition">
+                <div>
+                    <a href="{% url 'task_detail' task.pk %}" class="text-sm font-semibold text-slate-800 hover:text-brand-600">{{ task.titre }}</a>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ task.projet.nom }}</p>
+                </div>
+                <span class="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full border border-red-100">
+                    {{ task.date_limite|date:"d/m" }}
+                </span>
+            </div>
+            {% empty %}
+            <div class="flex flex-col items-center justify-center py-8 text-slate-400">
+                <i data-lucide="check-circle" class="w-8 h-8 mb-2 text-emerald-400"></i>
+                <p class="text-sm">Aucune tâche urgente !</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- My tasks -->
+    <div data-aos="fade-up" data-aos-delay="120" class="bg-white rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <h3 class="font-display font-semibold text-slate-700 text-sm flex items-center gap-2">
+                <i data-lucide="user-check" class="w-4 h-4 text-brand-500"></i>Mes tâches en cours
+            </h3>
+            <a href="{% url 'task_list' %}?assigned=me" class="text-xs text-brand-600 hover:text-brand-700 font-medium">Voir tout →</a>
+        </div>
+        <div class="divide-y divide-slate-50">
+            {% for task in my_tasks %}
+            <div class="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition">
+                <div>
+                    <a href="{% url 'task_detail' task.pk %}" class="text-sm font-semibold text-slate-800 hover:text-brand-600">{{ task.titre }}</a>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ task.projet.nom }}</p>
+                </div>
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full
+                             {% if task.statut == 'todo' %}status-todo{% elif task.statut == 'inprogress' %}status-inprogress{% else %}status-done{% endif %}">
+                    {{ task.get_statut_display }}
+                </span>
+            </div>
+            {% empty %}
+            <div class="flex flex-col items-center justify-center py-8 text-slate-400">
+                <i data-lucide="inbox" class="w-8 h-8 mb-2 opacity-50"></i>
+                <p class="text-sm">Aucune tâche assignée</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent projects -->
+{% if recent_projects %}
+<div data-aos="fade-up" data-aos-delay="100">
+    <div class="flex items-center justify-between mb-3">
+        <h3 class="font-display font-semibold text-slate-700 text-sm flex items-center gap-2">
+            <i data-lucide="folder-open" class="w-4 h-4 text-brand-500"></i>Projets récents
+        </h3>
+        <a href="{% url 'project_list' %}" class="text-xs text-brand-600 hover:text-brand-700 font-medium">Voir tout →</a>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for project in recent_projects %}
+        <a href="{% url 'project_detail' project.pk %}"
+           data-aos="zoom-in" data-aos-delay="{{ forloop.counter0|add:0|stringformat:"s" }}0"
+           class="bg-white rounded-2xl border border-slate-100 p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group">
+            <div class="flex items-start justify-between mb-3">
+                <div class="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-content text-brand-600 flex-shrink-0">
+                    <i data-lucide="folder" class="w-4 h-4 m-auto group-hover:scale-110 transition-transform"></i>
+                </div>
+                <span class="text-xs text-slate-400">{{ project.membres.count }} mbr</span>
+            </div>
+            <p class="font-display font-semibold text-slate-800 text-sm leading-tight mb-1">{{ project.nom }}</p>
+            <p class="text-xs text-slate-400 mb-3">{{ project.description|truncatewords:6|default:"—" }}</p>
+            <!-- Progress -->
+            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-700
+                            {% if project.get_progress == 100 %}bg-emerald-500{% elif project.get_progress >= 50 %}bg-amber-400{% else %}bg-brand-500{% endif %}"
+                     style="width:{{ project.get_progress }}%"></div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1.5">{{ project.get_progress }}% terminé</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+{% if stats.total_tasks > 0 %}
+new Chart(document.getElementById('taskDonut'), {
+    type: 'doughnut',
+    data: {
+        labels: ['À faire','En cours','Terminé'],
+        datasets: [{ data: [{{ stats.tasks_todo }},{{ stats.tasks_inprogress }},{{ stats.tasks_done }}],
+                     backgroundColor: ['#94a3b8','#f59e0b','#10b981'], borderWidth: 0 }]
+    },
+    options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ padding:16, font:{ size:12, family:'DM Sans' } } } }, cutout:'68%' }
+});
+{% endif %}
+{% if projects_chart %}
+const pcData = {{ projects_chart|safe }};
+new Chart(document.getElementById('projectBar'), {
+    type: 'bar',
+    data: {
+        labels: pcData.map(p => p.nom.length>14 ? p.nom.slice(0,14)+'…' : p.nom),
+        datasets: [{ label:'Tâches', data: pcData.map(p=>p.task_count),
+                     backgroundColor:'rgba(99,102,241,0.7)', borderRadius:6, borderSkipped:false }]
+    },
+    options: { responsive:true, plugins:{ legend:{ display:false } },
+               scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 }, grid:{ color:'rgba(0,0,0,0.04)' } },
+                        x:{ grid:{ display:false } } } }
+});
+{% endif %}
+</script>
+{% endblock %}

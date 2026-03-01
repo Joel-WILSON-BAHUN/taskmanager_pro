@@ -1,0 +1,143 @@
+{% extends 'core/base.html' %}
+{% block title %}Projets – TaskManager Pro{% endblock %}
+{% block page_title %}Projets{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6" data-aos="fade-down">
+    <div>
+        <h1 class="font-display text-2xl font-bold text-slate-800">Projets</h1>
+        <p class="text-slate-500 text-sm mt-0.5">{{ projects.count }} projet{{ projects.count|pluralize }} au total</p>
+    </div>
+    {% if user.is_admin %}
+    <a href="{% url 'project_create' %}"
+       class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-md">
+        <i data-lucide="plus" class="w-4 h-4"></i>Nouveau projet
+    </a>
+    {% endif %}
+</div>
+
+<!-- Search -->
+<form method="get" class="flex gap-2 mb-6" data-aos="fade-down" data-aos-delay="80">
+    <div class="relative flex-1">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2"><i data-lucide="search" class="w-4 h-4 text-slate-400"></i></span>
+        <input type="text" name="search" value="{{ search }}" placeholder="Rechercher un projet..." class="!pl-9">
+    </div>
+    <button type="submit" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold transition">Filtrer</button>
+    {% if search %}
+    <a href="{% url 'project_list' %}" class="px-4 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-sm text-slate-600 transition flex items-center gap-1">
+        <i data-lucide="x" class="w-4 h-4"></i>
+    </a>
+    {% endif %}
+</form>
+
+{% if projects %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for project in projects %}
+    <div data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:0 }}0"
+         class="bg-white rounded-2xl border border-slate-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group">
+
+        <!-- Card top accent -->
+        <div class="h-1.5 w-full" style="background:linear-gradient(90deg,#6366f1,#7c3aed)"></div>
+
+        <div class="p-5">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="folder-open" class="w-5 h-5 text-brand-600 group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-bold text-slate-800 text-sm leading-tight">{{ project.nom }}</h3>
+                        <p class="text-xs text-slate-400">{{ project.task_count }} tâche{{ project.task_count|pluralize }}</p>
+                    </div>
+                </div>
+                {% if user.is_admin %}
+                <div class="relative group/menu">
+                    <button onclick="toggleMenu('menu-{{ project.pk }}')"
+                            class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 transition">
+                        <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                    </button>
+                    <div id="menu-{{ project.pk }}"
+                         class="hidden absolute right-0 top-9 w-40 bg-white border border-slate-200 rounded-xl shadow-lg z-10 py-1">
+                        <a href="{% url 'project_edit' project.pk %}" class="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>Modifier
+                        </a>
+                        <a href="{% url 'project_delete' project.pk %}" class="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>Supprimer
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <p class="text-xs text-slate-500 mb-4 leading-relaxed">{{ project.description|truncatewords:15|default:"Aucune description" }}</p>
+
+            <!-- Dates -->
+            <div class="flex items-center gap-3 mb-4 text-xs text-slate-400">
+                <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i>{{ project.date_debut|date:"d/m/Y" }}</span>
+                {% if project.date_fin %}
+                <span class="flex items-center gap-1"><i data-lucide="calendar-x" class="w-3.5 h-3.5"></i>{{ project.date_fin|date:"d/m/Y" }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Progress -->
+            <div class="mb-4">
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-400">Avancement</span>
+                    <span class="font-semibold {% if project.get_progress == 100 %}text-emerald-600{% elif project.get_progress >= 50 %}text-amber-500{% else %}text-brand-600{% endif %}">
+                        {{ project.get_progress }}%
+                    </span>
+                </div>
+                <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-700
+                                {% if project.get_progress == 100 %}bg-emerald-500{% elif project.get_progress >= 50 %}bg-amber-400{% else %}bg-brand-500{% endif %}"
+                         style="width:{{ project.get_progress }}%"></div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between">
+                <div class="flex -space-x-2">
+                    {% for m in project.membres.all|slice:":4" %}
+                    <div class="w-7 h-7 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white"
+                         title="{{ m.get_full_name|default:m.username }}">
+                        {{ m.username|slice:":1"|upper }}
+                    </div>
+                    {% endfor %}
+                    {% if project.membres.count > 4 %}
+                    <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center border-2 border-white">
+                        +{{ project.membres.count|add:"-4" }}
+                    </div>
+                    {% endif %}
+                </div>
+                <a href="{% url 'project_detail' project.pk %}"
+                   class="flex items-center gap-1 text-xs text-brand-600 font-semibold hover:text-brand-700 transition">
+                    Voir <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div data-aos="fade-up" class="bg-white rounded-2xl border border-slate-100 py-16 text-center">
+    <i data-lucide="folder-x" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+    <h3 class="font-display font-semibold text-slate-500 mb-1">Aucun projet trouvé</h3>
+    {% if user.is_admin %}
+    <a href="{% url 'project_create' %}" class="inline-flex items-center gap-2 mt-4 bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">
+        <i data-lucide="plus" class="w-4 h-4"></i>Créer le premier projet
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleMenu(id) {
+    document.querySelectorAll('[id^="menu-"]').forEach(m => { if(m.id !== id) m.classList.add('hidden'); });
+    document.getElementById(id).classList.toggle('hidden');
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest('[onclick^="toggleMenu"]') && !e.target.closest('[id^="menu-"]'))
+        document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add('hidden'));
+});
+</script>
+{% endblock %}

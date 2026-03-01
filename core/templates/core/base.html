@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TaskManager Pro{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: { sans: ['DM Sans','sans-serif'], display: ['Sora','sans-serif'] },
+                colors: {
+                    brand: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81',950:'#1e1b4b' }
+                },
+                animation: {
+                    'fade-in': 'fadeIn .4s ease',
+                    'slide-down': 'slideDown .3s ease',
+                },
+                keyframes: {
+                    fadeIn:    {'0%':{opacity:'0',transform:'translateY(8px)'},'100%':{opacity:'1',transform:'translateY(0)'}},
+                    slideDown: {'0%':{opacity:'0',transform:'translateY(-6px)'},'100%':{opacity:'1',transform:'translateY(0)'}},
+                }
+            }
+        }
+    }
+    </script>
+    <style>
+        body { font-family:'DM Sans',sans-serif; background:#f1f5f9; }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family:'Sora',sans-serif; }
+        .sidebar-link {
+            display:flex; align-items:center; gap:10px; padding:8px 14px;
+            border-radius:10px; font-size:.875rem; font-weight:500;
+            color:rgba(199,210,254,.85); transition:all .2s;
+            border:1px solid transparent; text-decoration:none;
+        }
+        .sidebar-link:hover { color:#fff; background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.06); }
+        .sidebar-link.active { color:#fff; background:rgba(99,102,241,.35); border-color:rgba(129,140,248,.4); box-shadow:0 0 12px rgba(99,102,241,.2); }
+        .sidebar-link svg { flex-shrink:0; width:16px; height:16px; }
+        input[type=text],input[type=email],input[type=password],input[type=date],textarea,select {
+            width:100%; padding:9px 13px; border:1px solid #e2e8f0; border-radius:10px;
+            background:#fff; font-size:.875rem; font-family:'DM Sans',sans-serif;
+            transition:border-color .2s,box-shadow .2s; outline:none;
+        }
+        input:focus,textarea:focus,select:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.12); }
+        select[multiple] { padding:6px; }
+        ::-webkit-scrollbar { width:5px; }
+        ::-webkit-scrollbar-thumb { background:#c7d2fe; border-radius:99px; }
+        .status-todo       { background:#f1f5f9; color:#64748b; }
+        .status-inprogress { background:#fef3c7; color:#92400e; }
+        .status-done       { background:#d1fae5; color:#065f46; }
+        .prio-low    { background:#dbeafe; color:#1e40af; }
+        .prio-medium { background:#fef3c7; color:#92400e; }
+        .prio-high   { background:#fee2e2; color:#991b1b; }
+        [data-aos] { pointer-events:none; }
+        [data-aos].aos-animate { pointer-events:auto; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="h-full">
+{% if user.is_authenticated %}
+<div class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar"
+           class="fixed inset-y-0 left-0 z-50 w-64 flex flex-col
+                  bg-gradient-to-b from-brand-950 via-brand-900 to-brand-800
+                  shadow-2xl lg:translate-x-0 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+        <!-- Brand -->
+        <div class="flex items-center gap-3 px-5 py-[18px] border-b border-white/10">
+            <div class="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <i data-lucide="kanban" class="w-5 h-5 text-white"></i>
+            </div>
+            <div>
+                <p class="font-display text-white font-bold text-sm leading-tight">TaskManager Pro</p>
+                <p class="text-brand-300 text-[11px] truncate max-w-[130px]">{{ user.tenant.nom|default:"—" }}</p>
+            </div>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+            <p class="text-brand-400 text-[9px] font-bold uppercase tracking-widest px-3 py-2">Principal</p>
+            <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i data-lucide="layout-dashboard"></i> Tableau de bord
+            </a>
+            <a href="{% url 'project_list' %}" class="sidebar-link {% if 'project' in request.resolver_match.url_name %}active{% endif %}">
+                <i data-lucide="folder-open"></i> Projets
+            </a>
+            <a href="{% url 'task_list' %}" class="sidebar-link {% if 'task' in request.resolver_match.url_name %}active{% endif %}">
+                <i data-lucide="check-square"></i> Tâches
+            </a>
+
+            {% if user.is_admin %}
+            <p class="text-brand-400 text-[9px] font-bold uppercase tracking-widest px-3 py-2 mt-3">Administration</p>
+            <a href="{% url 'user_list' %}" class="sidebar-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+                <i data-lucide="users"></i> Utilisateurs
+            </a>
+            {% endif %}
+            {% if user.is_superuser %}
+            <p class="text-brand-400 text-[9px] font-bold uppercase tracking-widest px-3 py-2 mt-3">Super Admin</p>
+            <a href="{% url 'tenant_list' %}" class="sidebar-link"><i data-lucide="building-2"></i> Entreprises</a>
+            <a href="/admin/" class="sidebar-link" target="_blank"><i data-lucide="settings-2"></i> Admin Django</a>
+            {% endif %}
+        </nav>
+
+        <!-- Footer with profile + LOGOUT -->
+        <div class="px-3 py-4 border-t border-white/10 space-y-0.5">
+            <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i data-lucide="user-circle-2"></i>
+                <span class="truncate">{{ user.get_full_name|default:user.username }}</span>
+            </a>
+            <a href="{% url 'logout' %}"
+               class="sidebar-link !text-red-300 hover:!bg-red-500/20 hover:!border-red-400/20 hover:!text-red-200">
+                <i data-lucide="log-out"></i> Se déconnecter
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- MAIN -->
+    <div class="flex-1 flex flex-col lg:ml-64 min-h-screen">
+        <!-- Topbar -->
+        <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/60
+                       flex items-center justify-between px-5 h-14">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="lg:hidden w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-content text-slate-500 hover:bg-slate-50 transition">
+                    <i data-lucide="menu" class="w-4 h-4 m-auto"></i>
+                </button>
+                <span class="font-display font-semibold text-slate-700 text-sm">{% block page_title %}{% endblock %}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
+                    <i data-lucide="building-2" class="w-3.5 h-3.5"></i>{{ user.tenant.nom|default:"—" }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold
+                             {% if user.is_admin %}bg-brand-100 text-brand-700{% else %}bg-slate-100 text-slate-600{% endif %}">
+                    <i data-lucide="{% if user.is_admin %}shield-check{% else %}user{% endif %}" class="w-3 h-3"></i>
+                    {{ user.get_role_display }}
+                </span>
+                <a href="{% url 'logout' %}" title="Se déconnecter"
+                   class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-200 transition">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        {% if messages %}
+        <div class="px-5 pt-4 space-y-2">
+            {% for message in messages %}
+            <div class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium animate-slide-down
+                        {% if message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800
+                        {% elif 'error' in message.tags or 'danger' in message.tags %}bg-red-50 border-red-200 text-red-800
+                        {% else %}bg-brand-50 border-brand-200 text-brand-800{% endif %}">
+                <i data-lucide="{% if message.tags == 'success' %}check-circle{% elif 'error' in message.tags %}alert-circle{% else %}info{% endif %}" class="w-4 h-4 flex-shrink-0"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <main class="flex-1 p-5 animate-fade-in">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+{% else %}
+{% if messages %}
+<div class="fixed top-4 right-4 z-50 space-y-2">
+    {% for message in messages %}
+    <div class="px-4 py-3 rounded-xl shadow-lg text-sm font-medium
+                {% if message.tags == 'success' %}bg-emerald-600 text-white{% elif 'error' in message.tags %}bg-red-600 text-white{% else %}bg-brand-600 text-white{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+    AOS.init({ duration:500, easing:'ease-out-cubic', once:true, offset:20 });
+    lucide.createIcons();
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        document.getElementById('overlay').classList.toggle('hidden');
+    }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

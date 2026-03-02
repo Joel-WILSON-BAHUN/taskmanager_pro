@@ -18,14 +18,14 @@
 
     <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-1.5 text-xs text-slate-400">
-            {% if task.assigne_a %}
+        {% if task.assigne_a %}
             <div class="w-5 h-5 rounded-full bg-brand-500 text-white text-[9px] font-bold flex items-center justify-center">
                 {{ task.assigne_a.username|slice:":1"|upper }}
             </div>
-            <span>{{ task.assigne_a.get_full_name|default:task.assigne_a.username|truncatechars:14 }}</span>
-            {% else %}
+            <span>{% if task.assigne_a.get_full_name %}{{ task.assigne_a.get_full_name|truncatechars:14 }}{% else %}{{ task.assigne_a.username|truncatechars:14 }}{% endif %}</span>
+        {% else %}
             <i data-lucide="user-x" class="w-3.5 h-3.5"></i><span>Non assigné</span>
-            {% endif %}
+        {% endif %}
         </div>
         {% if task.date_limite %}
         <span class="text-[10px] font-semibold {% if task.is_overdue %}text-red-600 bg-red-50 border-red-100{% else %}text-slate-400 bg-slate-50 border-slate-100{% endif %} px-2 py-0.5 rounded-full border">

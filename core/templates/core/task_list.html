@@ -88,7 +88,7 @@
                             <div class="w-6 h-6 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center">
                                 {{ task.assigne_a.username|slice:":1"|upper }}
                             </div>
-                            <span class="text-xs text-slate-600">{{ task.assigne_a.get_full_name|default:task.assigne_a.username }}</span>
+                            <span class="text-xs text-slate-600">{% if task.assigne_a.get_full_name %}{{ task.assigne_a.get_full_name }}{% else %}{{ task.assigne_a.username }}{% endif %}</span>
                         </div>
                         {% else %}<span class="text-xs text-slate-300 flex items-center gap-1"><i data-lucide="user-x" class="w-3.5 h-3.5"></i>—</span>{% endif %}
                     </td>

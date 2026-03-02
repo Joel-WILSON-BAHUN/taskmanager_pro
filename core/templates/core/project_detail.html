@@ -18,7 +18,7 @@
             <div class="flex items-center gap-4 mt-3 text-xs text-white/60">
                 <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i>{{ project.date_debut|date:"d F Y" }}</span>
                 {% if project.date_fin %}<span class="flex items-center gap-1"><i data-lucide="calendar-x" class="w-3.5 h-3.5"></i>{{ project.date_fin|date:"d F Y" }}</span>{% endif %}
-                <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i>{{ project.created_by.get_full_name|default:project.created_by.username|default:"—" }}</span>
+                <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i>{% if project.created_by %}{% if project.created_by.get_full_name %}{{ project.created_by.get_full_name }}{% else %}{{ project.created_by.username }}{% endif %}{% else %}—{% endif %}</span>
             </div>
         </div>
         <div class="flex gap-2">

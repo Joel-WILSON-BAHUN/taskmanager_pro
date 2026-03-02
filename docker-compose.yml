@@ -1,22 +1,67 @@
 version: '3.9'
 
 services:
+
+  # ── Base de données PostgreSQL ─────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: taskmanager_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       taskmanager_db
+      POSTGRES_USER:     taskmanager_user
+      POSTGRES_PASSWORD: taskmanager_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"   # accessible depuis pgAdmin sur l'hôte
+    networks:
+      - taskmanager_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskmanager_user -d taskmanager_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── pgAdmin ────────────────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: taskmanager_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@taskmanager.pro
+      PGADMIN_DEFAULT_PASSWORD: pgadmin123
+      PGADMIN_LISTEN_PORT:      5050
+    ports:
+      - "5050:5050"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    networks:
+      - taskmanager_net
+
+  # ── Application Django ─────────────────────────────────────────────────────
   web:
     build: .
     container_name: taskmanager_web
     restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_HOST: db          # pointe vers le service 'db' du compose
+      DB_PORT: "5432"
     ports:
       - "8000:8000"
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-      - db_volume:/app
-    environment:
-      - DJANGO_SETTINGS_MODULE=taskmanager.settings
-      - DEBUG=False
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - taskmanager_net
 
+  # ── Nginx (reverse proxy) ──────────────────────────────────────────────────
   nginx:
     image: nginx:alpine
     container_name: taskmanager_nginx
@@ -32,9 +77,10 @@ services:
       - taskmanager_net
 
 volumes:
+  postgres_data:
+  pgadmin_data:
   static_volume:
   media_volume:
-  db_volume:
 
 networks:
   taskmanager_net:

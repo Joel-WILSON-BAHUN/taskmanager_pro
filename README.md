@@ -42,7 +42,7 @@ taskmanager_pro/
 cd taskmanager_pro
 
 # 2. Créer l'environnement virtuel
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate       # Linux/macOS
 # venv\Scripts\activate        # Windows
 

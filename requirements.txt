@@ -1,4 +1,17 @@
+# Framework
 Django>=4.2,<5.1
+
+# PostgreSQL driver
+psycopg2-binary>=2.9
+
+# Variables d'environnement
+python-decouple>=3.8
+
+# Serveur de production
 gunicorn>=21.2
+
+# Fichiers statiques
 whitenoise>=6.6
+
+# Images (avatars, logos)
 Pillow>=10.0

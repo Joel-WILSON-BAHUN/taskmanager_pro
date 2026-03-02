@@ -1,5 +1,7 @@
 {% extends 'core/base.html' %}
 {% block auth_content %}
+{% load split_filters %}
+
 <div class="min-h-screen flex" style="background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4f46e5 100%);">
     <!-- Left decorative panel -->
     <div class="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative overflow-hidden">
@@ -79,24 +81,7 @@
                 </div>
             </div>
 
-            <!-- Demo accounts -->
-            <div class="mt-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4" data-aos="fade-up" data-aos-delay="300">
-                <p class="text-white text-xs font-semibold mb-3 flex items-center gap-1.5">
-                    <i data-lucide="info" class="w-3.5 h-3.5"></i>Comptes de démonstration
-                </p>
-                <div class="grid grid-cols-2 gap-2 text-[11px]">
-                    <div class="bg-white/10 rounded-lg p-2.5">
-                        <p class="text-white font-semibold">🏢 TechCorp A</p>
-                        <p class="text-brand-200 mt-1"><code>admin_a</code> / admin123</p>
-                        <p class="text-brand-200"><code>emp_a</code> / emp123</p>
-                    </div>
-                    <div class="bg-white/10 rounded-lg p-2.5">
-                        <p class="text-white font-semibold">🚀 InnovateLab B</p>
-                        <p class="text-brand-200 mt-1"><code>admin_b</code> / admin123</p>
-                        <p class="text-brand-200"><code>emp_b</code> / emp123</p>
-                    </div>
-                </div>
-            </div>
+           
         </div>
     </div>
 </div>

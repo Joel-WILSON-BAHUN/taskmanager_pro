@@ -22,13 +22,13 @@ Puis exécuter dans **Query Tool** (clic droit sur PostgreSQL > Query Tool) :
 
 ```sql
 -- Créer l'utilisateur
-CREATE USER taskmanager_user WITH PASSWORD 'taskmanager_pass';
+CREATE USER joel WITH PASSWORD 'joel2311';
 
 -- Créer la base de données
-CREATE DATABASE taskmanager_db OWNER taskmanager_user;
+CREATE DATABASE taskmanager_db OWNER joel;
 
 -- Accorder tous les droits
-GRANT ALL PRIVILEGES ON DATABASE taskmanager_db TO taskmanager_user;
+GRANT ALL PRIVILEGES ON DATABASE taskmanager_db TO joel;
 ```
 
 ---

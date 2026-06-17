@@ -1,0 +1,53 @@
+[Unit]
+Description=Gunicorn WSGI — TaskManager Pro (Django)
+Documentation=https://docs.gunicorn.org/
+# Démarrage APRÈS le socket et PostgreSQL
+Requires=gunicorn.socket
+After=network.target postgresql.service gunicorn.socket
+
+[Service]
+# Utilisateur dédié (sécurité : pas root, pas www-data)
+User=taskmanager
+Group=www-data
+WorkingDirectory=/var/www/taskmanager_pro
+
+# Variables d'environnement chargées depuis .env
+EnvironmentFile=/var/www/taskmanager_pro/.env
+
+# Créer /run/gunicorn/ au démarrage (tmpfs — n'existe pas après reboot)
+RuntimeDirectory=gunicorn
+RuntimeDirectoryMode=0755
+
+# Commande Gunicorn
+# --workers : 2 × CPU + 1 (règle empirique)
+# --bind    : socket Unix activé par systemd (socket activation)
+# --timeout : 60s pour les requêtes lentes (uploads)
+# --access-logfile / --error-logfile : logs séparés et rotatifs
+ExecStart=/var/www/taskmanager_pro/venv/bin/gunicorn \
+    --workers 5 \
+    --worker-class sync \
+    --bind unix:/run/gunicorn/gunicorn.sock \
+    --timeout 60 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --access-logfile /var/log/gunicorn/access.log \
+    --error-logfile  /var/log/gunicorn/error.log \
+    --log-level info \
+    taskmanager.wsgi:application
+
+# Rechargement gracieux (pas de downtime) avec systemctl reload gunicorn
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Redémarrage automatique si crash (sauf arrêt volontaire)
+Restart=on-failure
+RestartSec=5s
+
+# Durée max d'arrêt propre avant SIGKILL
+TimeoutStopSec=30
+
+# Limites sécurité
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -99,3 +99,44 @@ MEDIA_URL  = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# ── Sécurité HTTPS ────────────────────────────────────────────────
+# Nginx envoie X-Forwarded-Proto: https → Django génère des URLs https://
+SECURE_PROXY_SSL_HEADER     = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# En production HTTPS : forcer les redirections sécurisées
+SECURE_SSL_REDIRECT          = True    # HTTP → HTTPS automatique
+SESSION_COOKIE_SECURE        = True    # Cookie session HTTPS seulement
+CSRF_COOKIE_SECURE           = True    # Cookie CSRF HTTPS seulement
+SECURE_HSTS_SECONDS          = 31536000  # HSTS 1 an
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_CONTENT_TYPE_NOSNIFF  = True
+SECURE_BROWSER_XSS_FILTER    = True
+X_FRAME_OPTIONS              = 'DENY'
+
+# ── Logging production ────────────────────────────────────────────
+# Les erreurs Django → /var/log/gunicorn/error.log (via Gunicorn)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/gunicorn/django.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'root': {
+        'handlers': ['file', 'console'],
+        'level': 'WARNING',
+    },
+}

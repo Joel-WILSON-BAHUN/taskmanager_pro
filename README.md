@@ -100,12 +100,12 @@ Accéder à : http://<IP_VM>
 - ✅ Filtres avancés sur les tâches
 - ✅ Gestion des utilisateurs (admin)
 - ✅ Isolation multi-tenant
-- ✅ Interface Bootstrap 5 responsive
+- ✅ Interface tailwind responsive
 - ✅ Tâches urgentes / en retard
 
 ## 🛠️ Technologies
 
 - **Backend** : Django 4.2 + SQLite
-- **Frontend** : Bootstrap 5 + Bootstrap Icons + Chart.js
+- **Frontend** : tailwind.css + Chart.js
 - **Déploiement** : Docker + Nginx + Gunicorn
-- **Infrastructure** : Proxmox VM
+- **Infrastructure** : Debian 13 

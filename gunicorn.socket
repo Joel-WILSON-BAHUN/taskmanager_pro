@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn socket — TaskManager Pro
+Documentation=https://docs.gunicorn.org/
+
+[Socket]
+# Socket Unix dans /run (tmpfs, recréé automatiquement au boot)
+ListenStream=/run/gunicorn/gunicorn.sock
+# Permissions : www-data (Nginx) doit pouvoir lire le socket
+SocketUser=www-data
+SocketGroup=www-data
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target

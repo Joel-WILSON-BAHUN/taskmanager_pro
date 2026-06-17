@@ -103,6 +103,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Nginx envoie X-Forwarded-Proto: https → Django génère des URLs https://
 SECURE_PROXY_SSL_HEADER     = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+CELERY_BROKER_URL     = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
 # En production HTTPS : forcer les redirections sécurisées
 SECURE_SSL_REDIRECT          = True    # HTTP → HTTPS automatique
 SESSION_COOKIE_SECURE        = True    # Cookie session HTTPS seulement
